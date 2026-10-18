@@ -1,0 +1,994 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <title>سایتورا</title>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    @font-face {
+      font-family: Vazirmatn;
+      src: url('/node_modules/@fontsource/vazirmatn/files/vazirmatn-arabic-400-normal.woff2')
+        format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: Vazirmatn;
+      src: url('/node_modules/@fontsource/vazirmatn/files/vazirmatn-arabic-500-normal.woff2')
+        format('woff2');
+      font-weight: 500;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: Vazirmatn;
+      src: url('/node_modules/@fontsource/vazirmatn/files/vazirmatn-arabic-700-normal.woff2')
+        format('woff2');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      font-family: Vazirmatn, Tahoma, sans-serif;
+      color-scheme: light dark;
+      --bg: var(--tg-theme-bg-color, #ffffff);
+      --text: var(--tg-theme-text-color, #222222);
+      --muted: var(--tg-theme-hint-color, #777777);
+      --card: var(--tg-theme-secondary-bg-color, #f2f2f2);
+      --accent: var(--tg-theme-button-color, #2481cc);
+      --accent-text: var(--tg-theme-button-text-color, #ffffff);
+      --border: var(--tg-theme-section-separator-color, #dddddd);
+      --danger: #d94c4c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Vazirmatn, Tahoma, sans-serif;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    button, input, textarea, select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:focus-visible, input:focus-visible,
+    textarea:focus-visible, select:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 680px;
+      margin: auto;
+      padding: 18px 16px calc(96px + env(safe-area-inset-bottom));
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 26px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 15px;
+      color: var(--accent-text);
+      background: var(--accent);
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .brand-name {
+      margin: 0;
+      font-size: 19px;
+      font-weight: 700;
+    }
+
+    .brand-subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .avatar {
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--card);
+      color: var(--text);
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+      animation: appear 160ms ease-out;
+    }
+
+    @keyframes appear {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    h1, h2, h3, p {
+      overflow-wrap: anywhere;
+    }
+
+    .page-title {
+      margin: 0 0 5px;
+      font-size: 23px;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      margin: 0 0 22px;
+      color: var(--muted);
+    }
+
+    .section-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin: 25px 0 12px;
+    }
+
+    .section-heading h2 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .text-button {
+      padding: 5px 0;
+      border: 0;
+      background: none;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .hero {
+      padding: 23px;
+      margin-bottom: 22px;
+      border-radius: 22px;
+      background: var(--card);
+    }
+
+    .hero-label {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .hero h2 {
+      margin: 0 0 8px;
+      font-size: 21px;
+    }
+
+    .hero p {
+      margin: 0 0 18px;
+      color: var(--muted);
+    }
+
+    .primary-button, .secondary-button, .danger-button {
+      min-height: 46px;
+      padding: 10px 16px;
+      border: 0;
+      border-radius: 13px;
+      font-weight: 500;
+    }
+
+    .primary-button {
+      background: var(--accent);
+      color: var(--accent-text);
+    }
+
+    .secondary-button {
+      background: var(--card);
+      color: var(--text);
+    }
+
+    .danger-button {
+      background: var(--danger);
+      color: white;
+    }
+
+    .hero .primary-button {
+      width: 100%;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stat {
+      min-width: 0;
+      padding: 14px 10px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    .stat-value {
+      display: block;
+      font-size: 23px;
+      font-weight: 700;
+    }
+
+    .stat-label {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .project-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .project-card {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 17px;
+    }
+
+    .project-card h3 {
+      margin: 0 0 5px;
+      font-size: 15px;
+    }
+
+    .project-description {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .project-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: var(--card);
+      color: var(--text);
+      font-size: 11px;
+    }
+
+    .empty {
+      padding: 24px 12px;
+      text-align: center;
+      border: 1px dashed var(--border);
+      border-radius: 16px;
+      color: var(--muted);
+    }
+
+    .form-card {
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .field input, .field textarea, .field select {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 16px;
+    }
+
+    .field textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    .field input::placeholder,
+    .field textarea::placeholder {
+      color: var(--muted);
+    }
+
+    .form-card .primary-button {
+      width: 100%;
+    }
+
+    .message {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: var(--card);
+      overflow-wrap: anywhere;
+    }
+
+    .message[hidden] {
+      display: none;
+    }
+
+    .profile-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 18px;
+      margin-bottom: 22px;
+      border-radius: 18px;
+      background: var(--card);
+    }
+
+    .profile-card .avatar {
+      width: 54px;
+      height: 54px;
+      background: var(--bg);
+    }
+
+    .profile-card h2 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .profile-card p {
+      margin: 2px 0 0;
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+
+    .settings-list {
+      border-top: 1px solid var(--border);
+    }
+
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 15px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .settings-row span {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .settings-row small {
+      display: block;
+      color: var(--muted);
+    }
+
+    .bottom-nav {
+      position: fixed;
+      z-index: 10;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 4px;
+      padding: 9px 12px calc(9px + env(safe-area-inset-bottom));
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .nav-item {
+      display: flex;
+      min-height: 54px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+      border: 0;
+      border-radius: 13px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .nav-item .nav-icon {
+      font-size: 21px;
+      line-height: 1.3;
+    }
+
+    .nav-item.active {
+      background: var(--card);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .loading {
+      color: var(--muted);
+      text-align: center;
+      padding: 16px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">س</div>
+        <div>
+          <p class="brand-name">سایتورا</p>
+          <p class="brand-subtitle">مدیریت پروژه‌های شما</p>
+        </div>
+      </div>
+      <div class="avatar" id="headerAvatar" aria-hidden="true">س</div>
+    </header>
+
+    <main>
+      <!-- HOME -->
+      <section class="page active" id="page-home" aria-labelledby="homeTitle">
+        <p class="subtitle" id="greeting">به سایتورا خوش آمدید 👋</p>
+
+        <div class="hero">
+          <p class="hero-label">ایده‌ای در ذهن دارید؟</p>
+          <h2>بیایید با هم بسازیمش.</h2>
+          <p>پروژه‌تان را ثبت کنید و مراحل انجام آن را در همین‌جا دنبال کنید.</p>
+          <button class="primary-button" id="startProject" type="button">
+            + ثبت پروژه جدید
+          </button>
+        </div>
+
+        <div class="section-heading">
+          <h2>نمای کلی</h2>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <span class="stat-value" id="totalCount">—</span>
+            <span class="stat-label">کل پروژه‌ها</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="activeCount">—</span>
+            <span class="stat-label">در حال انجام</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="doneCount">—</span>
+            <span class="stat-label">تکمیل‌شده</span>
+          </div>
+        </div>
+
+        <div class="section-heading">
+          <h2>آخرین پروژه‌ها</h2>
+          <button class="text-button" id="allProjects" type="button">مشاهده همه</button>
+        </div>
+
+        <div class="project-list" id="recentProjects">
+          <p class="loading">در حال دریافت پروژه‌ها…</p>
+        </div>
+      </section>
+
+      <!-- PROJECTS -->
+      <section class="page" id="page-projects" aria-labelledby="projectsTitle">
+        <h1 class="page-title" id="projectsTitle">پروژه‌های من</h1>
+        <p class="subtitle">درخواست‌ها و روند پیشرفت پروژه‌هایتان را مدیریت کنید.</p>
+
+        <button class="primary-button" id="newProject" type="button" style="width:100%; margin-bottom:18px">
+          + ثبت پروژه جدید
+        </button>
+
+        <div class="field">
+          <label for="projectFilter">نمایش پروژه‌ها</label>
+          <select id="projectFilter">
+            <option value="all">همه پروژه‌ها</option>
+            <option value="pending">در انتظار بررسی</option>
+            <option value="active">در حال انجام</option>
+            <option value="completed">تکمیل‌شده</option>
+            <option value="rejected">ردشده</option>
+          </select>
+        </div>
+
+        <div class="project-list" id="allProjectList">
+          <p class="loading">در حال دریافت پروژه‌ها…</p>
+        </div>
+
+        <div id="projectFormSection" hidden>
+          <div class="section-heading">
+            <h2>ثبت درخواست پروژه</h2>
+            <button class="text-button" id="cancelForm" type="button">بازگشت</button>
+          </div>
+
+          <form class="form-card" id="projectForm">
+            <div class="field">
+              <label for="projectTitle">عنوان پروژه</label>
+              <input id="projectTitle" name="title" required maxlength="120"
+                placeholder="مثلاً طراحی وب‌سایت فروشگاهی" />
+            </div>
+
+            <div class="field">
+              <label for="projectCategory">نوع پروژه</label>
+                <select id="projectCategory" name="category" required>
+                    <option value="">انتخاب کنید</option>
+                    <option value="web">طراحی و توسعه وب</option>
+                    <option value="bot">ربات یا مینی‌اپ تلگرام</option>
+                    <option value="mobile">اپلیکیشن اندروید و موبایل</option>
+                    <option value="desktop">نرم‌افزار دسکتاپ</option>
+                    <option value="other">سایر موارد</option>
+                </select>
+            </div>
+
+            <div class="field">
+              <label for="projectDescription">توضیحات پروژه</label>
+              <textarea id="projectDescription" name="description" required
+                maxlength="5000" placeholder="نیازمندی‌ها، امکانات و انتظاراتتان را توضیح دهید…"></textarea>
+            </div>
+
+            <div class="field">
+              <label for="projectBudget">بودجه پیشنهادی (اختیاری)</label>
+              <input id="projectBudget" name="budget" inputmode="numeric"
+                maxlength="30" placeholder="مثلاً ۵ میلیون تومان" />
+            </div>
+
+            <div class="field">
+              <label for="projectDeadline">زمان مورد انتظار (اختیاری)</label>
+              <input id="projectDeadline" name="deadline" maxlength="100"
+                placeholder="مثلاً سه هفته" />
+            </div>
+
+            <button class="primary-button" id="submitProject" type="submit">
+              ثبت درخواست
+            </button>
+            <div class="message" id="formMessage" role="status" aria-live="polite" hidden></div>
+          </form>
+        </div>
+      </section>
+
+      <!-- PROFILE -->
+      <section class="page" id="page-profile" aria-labelledby="profileTitle">
+        <h1 class="page-title" id="profileTitle">پروفایل</h1>
+        <p class="subtitle">اطلاعات حساب تلگرام شما</p>
+
+        <div class="profile-card">
+          <div class="avatar" id="profileAvatar" aria-hidden="true">س</div>
+          <div>
+            <h2 id="profileName">کاربر سایتورا</h2>
+            <p id="profileUsername">اطلاعات حساب</p>
+          </div>
+        </div>
+
+        <div class="section-heading">
+          <h2>حساب کاربری</h2>
+        </div>
+
+        <div class="settings-list">
+          <div class="settings-row">
+            <span>شناسه تلگرام</span>
+            <span id="profileId">—</span>
+          </div>
+          <div class="settings-row">
+            <span>تعداد پروژه‌ها</span>
+            <span id="profileProjectCount">—</span>
+          </div>
+          <div class="settings-row">
+            <span>راهنما<small>دریافت راهنمای استفاده از سایتورا</small></span>
+            <button class="text-button" id="helpButton" type="button">مشاهده</button>
+          </div>
+        </div>
+
+        <div class="section-heading">
+          <h2>درباره سایتورا</h2>
+        </div>
+        <p class="subtitle">
+          تمام درخواست‌ها و وضعیت پروژه‌هایتان را در یک محیط ساده و یکپارچه دنبال کنید.
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <nav class="bottom-nav" aria-label="ناوبری اصلی">
+    <button class="nav-item active" data-page="home" type="button" aria-current="page">
+      <span class="nav-icon" aria-hidden="true">⌂</span>
+      <span>خانه</span>
+    </button>
+    <button class="nav-item" data-page="projects" type="button">
+      <span class="nav-icon" aria-hidden="true">▤</span>
+      <span>پروژه‌ها</span>
+    </button>
+    <button class="nav-item" data-page="profile" type="button">
+      <span class="nav-icon" aria-hidden="true">♙</span>
+      <span>پروفایل</span>
+    </button>
+  </nav>
+
+  <script type="module">
+    import '@fontsource/vazirmatn/400.css';
+    import '@fontsource/vazirmatn/500.css';
+    import '@fontsource/vazirmatn/700.css';
+
+    const tg = window.Telegram?.WebApp;
+    tg?.ready();
+    tg?.expand();
+
+    const user = tg?.initDataUnsafe?.user || null;
+
+    const state = {
+      projects: [],
+      busy: false
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    const STATUS = {
+      pending: 'در انتظار بررسی',
+      accepted: 'پذیرفته‌شده',
+      in_progress: 'در حال انجام',
+      development: 'در حال توسعه',
+      finalizing: 'در حال نهایی‌سازی',
+      completed: 'تکمیل‌شده',
+      rejected: 'ردشده',
+      cancelled: 'لغوشده'
+    };
+
+    const CATEGORY = {
+      web: 'طراحی و توسعه وب',
+      telegram: 'ربات یا مینی‌اپ تلگرام',
+      android: 'اپلیکیشن اندروید',
+      desktop: 'نرم‌افزار دسکتاپ',
+      network: 'شبکه و زیرساخت',
+      other: 'سایر موارد'
+    };
+
+    function escapeHTML(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      })[char]);
+    }
+
+    function statusLabel(status) {
+      return STATUS[status] || status || 'نامشخص';
+    }
+
+    function isActive(status) {
+      return ['accepted', 'in_progress', 'development', 'finalizing'].includes(status);
+    }
+
+    function normalizeProject(project) {
+      return {
+        ...project,
+        id: project.id ?? project.projectId,
+        title: project.title ?? project.name ?? 'پروژه بدون عنوان',
+        description: project.description ?? '',
+        category: project.category ?? 'other',
+        status: project.status ?? 'pending'
+      };
+    }
+
+    function switchPage(page) {
+      document.querySelectorAll('.page').forEach((section) => {
+        section.classList.toggle('active', section.id === `page-${page}`);
+      });
+
+      document.querySelectorAll('.nav-item').forEach((button) => {
+        const selected = button.dataset.page === page;
+        button.classList.toggle('active', selected);
+
+        if (selected) {
+          button.setAttribute('aria-current', 'page');
+        } else {
+          button.removeAttribute('aria-current');
+        }
+      });
+
+      if (page === 'projects') renderProjects();
+      if (page === 'home') renderHome();
+    }
+
+    document.querySelectorAll('.nav-item').forEach((button) => {
+      button.addEventListener('click', () => switchPage(button.dataset.page));
+    });
+
+    function openProjectForm() {
+      switchPage('projects');
+      $('projectFormSection').hidden = false;
+      $('projectForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      $('projectTitle').focus({ preventScroll: true });
+    }
+
+    $('startProject').addEventListener('click', openProjectForm);
+    $('newProject').addEventListener('click', openProjectForm);
+
+    $('allProjects').addEventListener('click', () => switchPage('projects'));
+
+    $('cancelForm').addEventListener('click', () => {
+      $('projectFormSection').hidden = true;
+      $('projectForm').reset();
+      $('formMessage').hidden = true;
+    });
+
+    $('projectFilter').addEventListener('change', renderProjects);
+
+    function renderProjectCard(rawProject) {
+      const project = normalizeProject(rawProject);
+
+      const card = document.createElement('article');
+      card.className = 'project-card';
+
+      const title = document.createElement('h3');
+      title.textContent = project.title;
+
+      const description = document.createElement('p');
+      description.className = 'project-description';
+      description.textContent = project.description;
+
+      const meta = document.createElement('div');
+      meta.className = 'project-meta';
+
+      const status = document.createElement('span');
+      status.className = 'badge';
+      status.textContent = statusLabel(project.status);
+
+      const category = document.createElement('span');
+      category.className = 'project-description';
+      category.textContent = CATEGORY[project.category] || project.category;
+
+      meta.append(status, category);
+      card.append(title, description, meta);
+
+      return card;
+    }
+
+    function renderProjectList(container, projects) {
+      container.replaceChildren();
+
+      if (!projects.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = 'هنوز پروژه‌ای ثبت نکرده‌اید.';
+        container.append(empty);
+        return;
+      }
+
+      projects.forEach((project) => container.append(renderProjectCard(project)));
+    }
+
+    function renderHome() {
+      const projects = state.projects;
+
+      $('totalCount').textContent = projects.length;
+      $('activeCount').textContent =
+        projects.filter((p) => isActive(normalizeProject(p).status)).length;
+      $('doneCount').textContent =
+        projects.filter((p) => normalizeProject(p).status === 'completed').length;
+
+      renderProjectList($('recentProjects'), projects.slice(0, 3));
+    }
+
+    function renderProjects() {
+      const filter = $('projectFilter').value;
+
+      const filtered = state.projects.filter((raw) => {
+        const project = normalizeProject(raw);
+
+        if (filter === 'all') return true;
+        if (filter === 'pending') return project.status === 'pending';
+        if (filter === 'active') return isActive(project.status);
+        if (filter === 'completed') return project.status === 'completed';
+        if (filter === 'rejected') return project.status === 'rejected';
+
+        return true;
+      });
+
+      renderProjectList($('allProjectList'), filtered);
+    }
+
+    function renderProfile() {
+      const firstName = user?.first_name || 'کاربر';
+      const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(' ');
+      const initial = [...firstName][0] || 'س';
+
+      $('profileName').textContent = fullName || 'کاربر سایتورا';
+      $('profileUsername').textContent = user?.username
+        ? `@${user.username}`
+        : 'کاربر تلگرام';
+      $('profileId').textContent = user?.id ? String(user.id) : 'در دسترس نیست';
+      $('headerAvatar').textContent = initial;
+      $('profileAvatar').textContent = initial;
+      $('profileProjectCount').textContent = state.projects.length;
+
+      $('greeting').textContent = `سلام ${firstName}، خوش آمدید 👋`;
+    }
+
+    function showMessage(text, isError = false) {
+      const box = $('formMessage');
+      box.hidden = false;
+      box.textContent = text;
+      box.style.color = isError ? 'var(--danger)' : 'var(--text)';
+    }
+
+    /*
+     * Integration note:
+     * These calls use the previously proposed Serverless interface.
+     * Confirm the actual endpoint invocation API supported by your
+     * installed Telegram Serverless SDK before relying on deployment.
+     */
+    function callEndpoint(name, payload = {}) {
+      return new Promise((resolve, reject) => {
+        if (!tg?.Serverless?.call) {
+          reject(new Error('اتصال به سرویس سایتورا در دسترس نیست.'));
+          return;
+        }
+
+        try {
+          tg.Serverless.call(name, payload, (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          });
+        } catch (error) {
+          reject(error);
+        }
+      });
+    }
+
+    async function loadProjects() {
+      try {
+        const result = await callEndpoint('getDashboard', {});
+
+        const projects = Array.isArray(result)
+          ? result
+          : result?.projects;
+
+        if (!Array.isArray(projects)) {
+          throw new Error('ساختار پاسخ سرویس پروژه‌ها معتبر نیست.');
+        }
+
+        state.projects = projects.map(normalizeProject);
+      } catch (error) {
+        console.error('getDashboard failed:', error);
+        state.projects = [];
+        $('recentProjects').replaceChildren();
+
+        const message = document.createElement('div');
+        message.className = 'empty';
+        message.textContent = 'دریافت پروژه‌ها ناموفق بود. اتصال سرویس را بررسی کنید.';
+        $('recentProjects').append(message);
+      }
+
+      renderHome();
+      renderProjects();
+      renderProfile();
+    }
+
+    $('projectForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      if (state.busy) return;
+
+      if (!user?.id) {
+        showMessage('برای ثبت پروژه، مینی‌اپ را از داخل تلگرام باز کنید.', true);
+        return;
+      }
+
+      const form = new FormData(event.currentTarget);
+
+      const payload = {
+        title: String(form.get('title') || '').trim(),
+        category: String(form.get('category') || ''),
+        description: String(form.get('description') || '').trim(),
+        budget: String(form.get('budget') || '').trim(),
+        deadline: String(form.get('deadline') || '').trim()
+      };
+
+      if (!payload.title || !payload.category || !payload.description) {
+        showMessage('لطفاً عنوان، نوع و توضیحات پروژه را تکمیل کنید.', true);
+        return;
+      }
+
+      state.busy = true;
+      $('submitProject').disabled = true;
+      $('submitProject').textContent = 'در حال ثبت…';
+
+      try {
+        await callEndpoint('createProject', payload);
+
+        showMessage('درخواست شما ثبت شد. پس از بررسی، وضعیت آن را همین‌جا خواهید دید.');
+        $('projectForm').reset();
+
+        await loadProjects();
+      } catch (error) {
+        console.error('createProject failed:', error);
+        showMessage(
+          error?.message || 'ثبت پروژه انجام نشد. لطفاً اتصال سرویس را بررسی کنید.',
+          true
+        );
+      } finally {
+        state.busy = false;
+        $('submitProject').disabled = false;
+        $('submitProject').textContent = 'ثبت درخواست';
+      }
+    });
+
+    $('helpButton').addEventListener('click', () => {
+      tg?.showAlert?.(
+        'از بخش پروژه‌ها درخواست جدید ثبت کنید. وضعیت درخواست‌ها در همان بخش نمایش داده می‌شود.'
+      );
+    });
+
+    if (tg?.themeParams) {
+      const params = tg.themeParams;
+      const root = document.documentElement;
+
+      if (params.bg_color) root.style.setProperty('--tg-theme-bg-color', params.bg_color);
+      if (params.text_color) root.style.setProperty('--tg-theme-text-color', params.text_color);
+      if (params.hint_color) root.style.setProperty('--tg-theme-hint-color', params.hint_color);
+      if (params.secondary_bg_color) {
+        root.style.setProperty('--tg-theme-secondary-bg-color', params.secondary_bg_color);
+      }
+      if (params.button_color) root.style.setProperty('--tg-theme-button-color', params.button_color);
+      if (params.button_text_color) {
+        root.style.setProperty('--tg-theme-button-text-color', params.button_text_color);
+      }
+    }
+
+    renderProfile();
+    renderHome();
+    renderProjects();
+    loadProjects();
+  </script>
+</body>
+</html>
