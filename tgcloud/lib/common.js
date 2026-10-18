@@ -16,7 +16,7 @@ export const ADMIN_ID = 6467909267;
  * Set this ONCE, after `npm run deploy` prints the Mini App URL
  * (e.g. https://app12345.tgcloud.ai/). Used by all handlers.
  */
-export const MINI_APP_URL = "https://YOUR_APP_URL";
+export const MINI_APP_URL = "https://app8836683855.tgcloud.ai/";
 
 export function isAdmin(userId) {
   return Number(userId) === Number(ADMIN_ID);
