@@ -2,7 +2,6 @@ import { db } from "sdk";
 import { eq, desc } from "sdk/db";
 
 import {
-  users,
   projects,
   projectStatuses
 } from "../schema.js";
@@ -12,6 +11,8 @@ import {
   isAdmin,
   statusLabel
 } from "../lib/common.js";
+
+const MAX_PROJECTS = 200;
 
 export default async function (input, ctx) {
   const user = ctx.initData.user;
@@ -34,6 +35,7 @@ export default async function (input, ctx) {
 
   const rows = await projectQuery
     .orderBy(desc(projects.createdAt))
+    .limit(MAX_PROJECTS)
     .all();
 
   const statuses = await db

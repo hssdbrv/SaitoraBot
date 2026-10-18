@@ -9,11 +9,14 @@ import {
 
 /*
  * Replace this value with your own Telegram numeric user ID.
- *
- * You can obtain it using a trusted Telegram ID bot.
- * Do not use your username here.
  */
 export const ADMIN_ID = 6467909267;
+
+/*
+ * Set this ONCE, after `npm run deploy` prints the Mini App URL
+ * (e.g. https://app12345.tgcloud.ai/). Used by all handlers.
+ */
+export const MINI_APP_URL = "https://YOUR_APP_URL";
 
 export function isAdmin(userId) {
   return Number(userId) === Number(ADMIN_ID);
@@ -113,27 +116,33 @@ export async function recordActivity(
 }
 
 export async function notifyAdmin(text, replyMarkup) {
-  if (!ADMIN_ID || ADMIN_ID === 123456789) {
-    console.error(
-      "Configure ADMIN_ID in tgcloud/lib/common.js"
-    );
-    return;
+  try {
+    await api.sendMessage({
+      chat_id: ADMIN_ID,
+      text,
+      parse_mode: "HTML",
+      reply_markup: replyMarkup
+    });
+  } catch (error) {
+    console.error("notifyAdmin failed:", error?.description || error);
   }
-
-  await api.sendMessage({
-    chat_id: ADMIN_ID,
-    text,
-    parse_mode: "HTML",
-    reply_markup: replyMarkup
-  });
 }
 
+/*
+ * Never throws: a client who blocked the bot must not break
+ * an already-saved status change.
+ * `text` is sent as HTML — callers must escapeHtml() any user data.
+ */
 export async function notifyClient(project, text) {
-  await api.sendMessage({
-    chat_id: project.clientId,
-    text,
-    parse_mode: "HTML"
-  });
+  try {
+    await api.sendMessage({
+      chat_id: project.clientId,
+      text,
+      parse_mode: "HTML"
+    });
+  } catch (error) {
+    console.error("notifyClient failed:", error?.description || error);
+  }
 }
 
 export async function getProjectById(id) {
@@ -142,4 +151,75 @@ export async function getProjectById(id) {
     .from(projects)
     .where(eq(projects.id, Number(id)))
     .get();
+}
+
+/*
+ * Single source of truth for accepting / declining a pending project.
+ * Used by both the Mini App endpoint and the bot's inline buttons.
+ *
+ * decision: "accepted" | "declined"
+ * Throws Error with a Persian `message` and `.code` on invalid state.
+ */
+export async function reviewProjectDecision(projectId, decision, actorId) {
+  if (!["accepted", "declined"].includes(decision)) {
+    throw Object.assign(new Error("تصمیم انتخاب‌شده معتبر نیست."), {
+      code: "BAD_DECISION"
+    });
+  }
+
+  const project = await getProjectById(projectId);
+
+  if (!project) {
+    throw Object.assign(new Error("پروژه پیدا نشد."), {
+      code: "NOT_FOUND"
+    });
+  }
+
+  if (project.status !== "pending") {
+    throw Object.assign(new Error("این پروژه قبلاً بررسی شده است."), {
+      code: "ALREADY_REVIEWED"
+    });
+  }
+
+  // Only update if it is STILL pending (guards against double-clicks).
+  const updated = await db
+    .update(projects)
+    .set({
+      status: decision,
+      updatedAt: Math.floor(Date.now() / 1000)
+    })
+    .where(
+      eq(projects.id, project.id),
+      eq(projects.status, "pending")
+    )
+    .returning({ id: projects.id })
+    .run();
+
+  if (Array.isArray(updated) && updated.length === 0) {
+    throw Object.assign(new Error("این پروژه قبلاً بررسی شده است."), {
+      code: "ALREADY_REVIEWED"
+    });
+  }
+
+  await recordActivity(
+    project.id,
+    Number(actorId),
+    decision,
+    "بررسی درخواست توسط مدیر"
+  );
+
+  const title = escapeHtml(project.title);
+
+  await notifyClient(
+    project,
+    decision === "accepted"
+      ? `خبر خوب! پروژه «${title}» پذیرفته شد.\n\nوضعیت فعلی: ${statusLabel(decision)}`
+      : `درخواست پروژه «${title}» بررسی شد و در حال حاضر پذیرفته نشد.\n\nبرای اطلاعات بیشتر می‌توانید با فریلنسر تماس بگیرید.`
+  );
+
+  return {
+    project: { ...project, status: decision },
+    status: decision,
+    statusLabel: statusLabel(decision)
+  };
 }

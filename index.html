@@ -461,6 +461,51 @@
       text-align: center;
       padding: 16px;
     }
+
+    .admin-box {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .admin-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .admin-input {
+      width: 100%;
+      padding: 10px 12px;
+      font: inherit;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .admin-btn {
+      flex: 1;
+      padding: 10px 12px;
+      font: inherit;
+      font-weight: 500;
+      color: var(--accent-text);
+      background: var(--accent);
+      border: 0;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .admin-btn.danger {
+      background: var(--danger);
+      color: #ffffff;
+    }
+
+    .admin-btn:disabled {
+      opacity: 0.6;
+    }
   </style>
 </head>
 
@@ -665,6 +710,7 @@
 
     const state = {
       projects: [],
+      role: 'client',
       busy: false
     };
 
@@ -673,13 +719,21 @@
     const STATUS = {
       pending: 'در انتظار بررسی',
       accepted: 'پذیرفته‌شده',
-      in_progress: 'در حال انجام',
-      development: 'در حال توسعه',
+      developing: 'در حال توسعه',
+      testing: 'در حال تست',
       finalizing: 'در حال نهایی‌سازی',
+      waiting_client: 'در انتظار پاسخ کارفرما',
       completed: 'تکمیل‌شده',
-      rejected: 'ردشده',
+      on_hold: 'متوقف‌شده',
+      declined: 'ردشده',
       cancelled: 'لغوشده'
     };
+
+    // Statuses an admin may move a reviewed project to (same as backend).
+    const ADMIN_STATUSES = [
+      'accepted', 'developing', 'testing', 'finalizing',
+      'waiting_client', 'completed', 'on_hold', 'cancelled'
+    ];
 
     const CATEGORY = {
       web: 'طراحی و توسعه وب',
@@ -705,7 +759,10 @@
     }
 
     function isActive(status) {
-      return ['accepted', 'in_progress', 'development', 'finalizing'].includes(status);
+      return [
+        'accepted', 'developing', 'testing',
+        'finalizing', 'waiting_client'
+      ].includes(status);
     }
 
     function normalizeProject(project) {
@@ -790,7 +847,116 @@
       meta.append(status, category);
       card.append(title, description, meta);
 
+      if (state.role === 'admin') {
+        card.append(renderAdminControls(project));
+      }
+
       return card;
+    }
+
+    async function runAdminAction(endpoint, payload, doneText) {
+      if (state.busy) return;
+      state.busy = true;
+
+      try {
+        await callEndpoint(endpoint, payload);
+        tg?.HapticFeedback?.notificationOccurred?.('success');
+        tg?.showAlert?.(doneText);
+        await loadProjects();
+      } catch (error) {
+        console.error(`${endpoint} failed:`, error);
+        tg?.HapticFeedback?.notificationOccurred?.('error');
+        tg?.showAlert?.(error?.message || 'انجام عملیات ناموفق بود.');
+      } finally {
+        state.busy = false;
+      }
+    }
+
+    function makeButton(text, className, onClick) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = className;
+      button.textContent = text;
+      button.addEventListener('click', onClick);
+      return button;
+    }
+
+    function renderAdminControls(project) {
+      const box = document.createElement('div');
+      box.className = 'admin-box';
+
+      const info = document.createElement('p');
+      info.className = 'project-description';
+      info.textContent =
+        `شناسه: SAI-${project.id} | مشتری: ${project.clientId}` +
+        (project.budget ? ` | بودجه: ${project.budget}` : '') +
+        (project.deadline ? ` | مهلت: ${project.deadline}` : '');
+      box.append(info);
+
+      if (project.status === 'pending') {
+        const row = document.createElement('div');
+        row.className = 'admin-row';
+
+        row.append(
+          makeButton('✅ پذیرش', 'admin-btn', () =>
+            runAdminAction(
+              'reviewProject',
+              { projectId: project.id, decision: 'accepted' },
+              'پروژه پذیرفته شد.'
+            )
+          ),
+          makeButton('❌ رد', 'admin-btn danger', () =>
+            runAdminAction(
+              'reviewProject',
+              { projectId: project.id, decision: 'declined' },
+              'پروژه رد شد.'
+            )
+          )
+        );
+
+        box.append(row);
+        return box;
+      }
+
+      if (['declined', 'cancelled'].includes(project.status)) {
+        return box;
+      }
+
+      const select = document.createElement('select');
+      select.className = 'admin-input';
+
+      ADMIN_STATUSES.forEach((key) => {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = STATUS[key];
+        option.selected = key === project.status;
+        select.append(option);
+      });
+
+      const note = document.createElement('input');
+      note.className = 'admin-input';
+      note.maxLength = 500;
+      note.placeholder = 'توضیحات برای مشتری (اختیاری)';
+
+      const save = makeButton('ثبت وضعیت', 'admin-btn', () => {
+        if (select.value === project.status) {
+          tg?.showAlert?.('پروژه از قبل در همین وضعیت است.');
+          return;
+        }
+
+        runAdminAction(
+          'updateProjectStatus',
+          {
+            projectId: project.id,
+            status: select.value,
+            note: note.value.trim()
+          },
+          'وضعیت پروژه به‌روزرسانی شد.'
+        );
+      });
+
+      box.append(select, note, save);
+      return box;
     }
 
     function renderProjectList(container, projects) {
@@ -799,7 +965,9 @@
       if (!projects.length) {
         const empty = document.createElement('div');
         empty.className = 'empty';
-        empty.textContent = 'هنوز پروژه‌ای ثبت نکرده‌اید.';
+        empty.textContent = state.role === 'admin'
+          ? 'پروژه‌ای وجود ندارد.'
+          : 'هنوز پروژه‌ای ثبت نکرده‌اید.';
         container.append(empty);
         return;
       }
@@ -829,7 +997,9 @@
         if (filter === 'pending') return project.status === 'pending';
         if (filter === 'active') return isActive(project.status);
         if (filter === 'completed') return project.status === 'completed';
-        if (filter === 'rejected') return project.status === 'rejected';
+        if (filter === 'rejected') {
+          return ['declined', 'cancelled'].includes(project.status);
+        }
 
         return true;
       });
@@ -861,12 +1031,6 @@
       box.style.color = isError ? 'var(--danger)' : 'var(--text)';
     }
 
-    /*
-     * Integration note:
-     * These calls use the previously proposed Serverless interface.
-     * Confirm the actual endpoint invocation API supported by your
-     * installed Telegram Serverless SDK before relying on deployment.
-     */
     function callEndpoint(name, payload = {}) {
       return new Promise((resolve, reject) => {
         if (!tg?.Serverless?.call) {
@@ -897,6 +1061,7 @@
           throw new Error('ساختار پاسخ سرویس پروژه‌ها معتبر نیست.');
         }
 
+        state.role = result?.user?.role === 'admin' ? 'admin' : 'client';
         state.projects = projects.map(normalizeProject);
       } catch (error) {
         console.error('getDashboard failed:', error);

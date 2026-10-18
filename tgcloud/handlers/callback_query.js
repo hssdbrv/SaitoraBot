@@ -1,20 +1,20 @@
-import { api, db } from "sdk";
-import { eq } from "sdk/db";
-
-import {
-  projects
-} from "../schema.js";
+import { api } from "sdk";
 
 import {
   ADMIN_ID,
+  MINI_APP_URL,
   isAdmin,
   statusLabel,
-  recordActivity,
-  notifyClient,
-  getProjectById
+  reviewProjectDecision
 } from "../lib/common.js";
 
-const MINI_APP_URL = "https://YOUR_APP_URL";
+async function alertUser(query, text) {
+  await api.answerCallbackQuery({
+    callback_query_id: query.id,
+    text,
+    show_alert: true
+  });
+}
 
 export default async function (query) {
   if (!query || !query.from || !query.data) {
@@ -41,12 +41,7 @@ export default async function (query) {
 
   if (data.startsWith("review:")) {
     if (!isAdmin(userId)) {
-      await api.answerCallbackQuery({
-        callback_query_id: query.id,
-        text: "دسترسی غیرمجاز",
-        show_alert: true
-      });
-
+      await alertUser(query, "دسترسی غیرمجاز");
       return;
     }
 
@@ -54,65 +49,29 @@ export default async function (query) {
     const projectId = Number(idString);
 
     if (!Number.isInteger(projectId) || projectId <= 0) {
-      await api.answerCallbackQuery({
-        callback_query_id: query.id,
-        text: "شناسه پروژه نامعتبر است.",
-        show_alert: true
-      });
-
-      return;
-    }
-
-    const project = await getProjectById(projectId);
-
-    if (!project) {
-      await api.answerCallbackQuery({
-        callback_query_id: query.id,
-        text: "پروژه پیدا نشد.",
-        show_alert: true
-      });
-
-      return;
-    }
-
-    if (project.status !== "pending") {
-      await api.answerCallbackQuery({
-        callback_query_id: query.id,
-        text: "این پروژه قبلاً بررسی شده است.",
-        show_alert: true
-      });
-
+      await alertUser(query, "شناسه پروژه نامعتبر است.");
       return;
     }
 
     if (action !== "accept" && action !== "decline") {
-      await api.answerCallbackQuery({
-        callback_query_id: query.id,
-        text: "عملیات نامعتبر است.",
-        show_alert: true
-      });
-
+      await alertUser(query, "عملیات نامعتبر است.");
       return;
     }
 
-    const newStatus =
-      action === "accept" ? "accepted" : "declined";
+    const decision = action === "accept" ? "accepted" : "declined";
 
-    await db
-      .update(projects)
-      .set({
-        status: newStatus,
-        updatedAt: Math.floor(Date.now() / 1000)
-      })
-      .where(eq(projects.id, projectId))
-      .run();
+    let result;
 
-    await recordActivity(
-      projectId,
-      userId,
-      newStatus,
-      "تصمیم مدیر"
-    );
+    try {
+      result = await reviewProjectDecision(projectId, decision, userId);
+    } catch (error) {
+      if (error.code) {
+        await alertUser(query, error.message);
+        return;
+      }
+
+      throw error;
+    }
 
     await api.answerCallbackQuery({
       callback_query_id: query.id,
@@ -138,23 +97,11 @@ export default async function (query) {
       }
     });
 
-    const updatedProject = {
-      ...project,
-      status: newStatus
-    };
-
-    await notifyClient(
-      updatedProject,
-      action === "accept"
-        ? `خبر خوب! پروژه «${project.title}» پذیرفته شد.\n\nوضعیت فعلی: ${statusLabel(newStatus)}`
-        : `درخواست پروژه «${project.title}» بررسی شد و در حال حاضر پذیرفته نشد.\n\nبرای اطلاعات بیشتر می‌توانید با فریلنسر تماس بگیرید.`
-    );
-
     await api.sendMessage({
       chat_id: ADMIN_ID,
       text:
         `پروژه شماره ${projectId} بررسی شد.\n` +
-        `وضعیت جدید: ${statusLabel(newStatus)}`
+        `وضعیت جدید: ${statusLabel(result.status)}`
     });
 
     return;

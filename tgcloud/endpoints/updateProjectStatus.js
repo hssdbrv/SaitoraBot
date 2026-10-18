@@ -2,13 +2,13 @@ import { db, EndpointError } from "sdk";
 import { eq } from "sdk/db";
 
 import {
-  projects,
-  projectStatuses
+  projects
 } from "../schema.js";
 
 import {
   isAdmin,
   statusLabel,
+  escapeHtml,
   recordActivity,
   notifyClient,
   getProjectById
@@ -56,6 +56,13 @@ export default async function (input, ctx) {
     throw new EndpointError("پروژه پیدا نشد.");
   }
 
+  // A pending project must go through accept/decline first.
+  if (project.status === "pending") {
+    throw new EndpointError(
+      "ابتدا باید درخواست پروژه پذیرفته یا رد شود."
+    );
+  }
+
   if (
     project.status === "declined" ||
     project.status === "cancelled"
@@ -63,6 +70,10 @@ export default async function (input, ctx) {
     throw new EndpointError(
       "وضعیت این پروژه قابل تغییر نیست."
     );
+  }
+
+  if (project.status === newStatus) {
+    throw new EndpointError("پروژه از قبل در همین وضعیت است.");
   }
 
   await db
@@ -81,17 +92,12 @@ export default async function (input, ctx) {
     `${project.status} → ${newStatus}${note ? ` | ${note}` : ""}`
   );
 
-  const updatedProject = {
-    ...project,
-    status: newStatus
-  };
-
   await notifyClient(
-    updatedProject,
+    project,
     `به‌روزرسانی پروژه شما\n\n` +
-    `عنوان: ${project.title}\n` +
+    `عنوان: ${escapeHtml(project.title)}\n` +
     `وضعیت جدید: ${statusLabel(newStatus)}` +
-    (note ? `\n\nتوضیحات:\n${note}` : "")
+    (note ? `\n\nتوضیحات:\n${escapeHtml(note)}` : "")
   );
 
   return {

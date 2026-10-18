@@ -4,19 +4,12 @@ import { eq, desc } from "sdk/db";
 import { projects } from "../schema.js";
 
 import {
-  ADMIN_ID,
+  MINI_APP_URL,
   ensureUser,
   isAdmin,
   escapeHtml,
   statusLabel
 } from "../lib/common.js";
-
-/*
- * Set this after deploying the Mini App.
- *
- * Telegram Serverless prints the hosted URL after deployment.
- */
-const MINI_APP_URL = "https://YOUR_APP_URL";
 
 export default async function (message) {
   if (!message || !message.chat || !message.from) {
