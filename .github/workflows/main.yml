@@ -1,0 +1,49 @@
+name: Deploy to tgcloud
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Never run two deploys at once; a newer push replaces a queued one.
+concurrency:
+  group: tgcloud-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Write tgcloud credentials
+        env:
+          TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
+        run: |
+          test -n "$TGCLOUD_TOKEN" || { echo "Missing TGCLOUD_TOKEN secret"; exit 1; }
+          mkdir -p .tgcloud
+          jq -n --arg token "$TGCLOUD_TOKEN" '{token: $token}' > .tgcloud/credentials
+          chmod 600 .tgcloud/credentials
+
+      - name: Build and push
+        run: npm run deploy
+
+      - name: Remove credentials
+        if: always()
+        run: rm -f .tgcloud/credentials
+        
