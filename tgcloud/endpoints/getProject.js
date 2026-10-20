@@ -47,7 +47,7 @@ export default async function (input, ctx) {
     .select()
     .from(projectActivity)
     .where(eq(projectActivity.projectId, projectId))
-    .orderBy(desc(projectActivity.createdAt))
+    .orderBy(desc(projectActivity.id))
     .all();
 
   return {

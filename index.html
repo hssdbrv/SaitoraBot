@@ -98,6 +98,7 @@
     }
 
     .brand-mark {
+      overflow: hidden;
       display: grid;
       place-items: center;
       width: 44px;
@@ -121,7 +122,15 @@
       font-size: 12px;
     }
 
+    .avatar-img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
     .avatar {
+      overflow: hidden;
       display: grid;
       place-items: center;
       flex-shrink: 0;
@@ -506,6 +515,217 @@
     .admin-btn:disabled {
       opacity: 0.6;
     }
+
+    .project-card.clickable {
+      cursor: pointer;
+      transition: transform 0.12s ease, border-color 0.12s ease;
+    }
+
+    .project-card.clickable:active {
+      transform: scale(0.99);
+      border-color: var(--accent);
+    }
+
+    .progress-card {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 18px;
+      margin: 16px 0;
+    }
+
+    .progress-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 12px;
+    }
+
+    .progress-title {
+      font-weight: 500;
+    }
+
+    .progress-percent {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .progress-track {
+      height: 14px;
+      background: var(--bg);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0;
+      border-radius: 999px;
+      background-color: var(--accent);
+      background-image: linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.28) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.28) 50%,
+        rgba(255, 255, 255, 0.28) 75%,
+        transparent 75%
+      );
+      background-size: 22px 22px;
+      transition: width 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .progress-fill.active {
+      animation: stripes 1.2s linear infinite;
+    }
+
+    .progress-fill.paused {
+      background-color: var(--muted);
+    }
+
+    .progress-fill.stopped {
+      background-color: var(--danger);
+    }
+
+    .progress-fill.done {
+      background-color: #2e9e5b;
+    }
+
+    @keyframes stripes {
+      from { background-position: 0 0; }
+      to { background-position: -22px 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .progress-fill.active { animation: none; }
+    }
+
+    .progress-caption {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .steps {
+      display: flex;
+      justify-content: space-between;
+      gap: 4px;
+      margin-top: 16px;
+    }
+
+    .step {
+      flex: 1;
+      min-width: 0;
+      text-align: center;
+      font-size: 10.5px;
+      color: var(--muted);
+    }
+
+    .step-dot {
+      display: block;
+      width: 14px;
+      height: 14px;
+      margin: 0 auto 5px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: var(--bg);
+    }
+
+    .step.done .step-dot {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .step.current .step-dot {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(36, 129, 204, 0.25);
+    }
+
+    .step.done,
+    .step.current {
+      color: var(--text);
+    }
+
+    .detail-section {
+      border: 1px solid var(--border);
+      border-radius: 17px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .detail-section h2 {
+      margin: 0 0 10px;
+      font-size: 15px;
+    }
+
+    .detail-text {
+      margin: 0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .detail-row:first-of-type {
+      border-top: 0;
+    }
+
+    .detail-label {
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .detail-value {
+      text-align: left;
+      overflow-wrap: anywhere;
+    }
+
+    .timeline {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .timeline-item {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 0 20px 16px 0;
+      border-right: 2px solid var(--border);
+      margin-right: 5px;
+    }
+
+    .timeline-item:last-child {
+      border-right-color: transparent;
+      padding-bottom: 0;
+    }
+
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      right: -7px;
+      top: 4px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .timeline-item small {
+      color: var(--muted);
+    }
+
+    .timeline-note {
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
   </style>
 </head>
 
@@ -513,7 +733,7 @@
   <div class="app">
     <header class="topbar">
       <div class="brand">
-        <div class="brand-mark" aria-hidden="true">س</div>
+        <div class="brand-mark" id="botAvatar" aria-hidden="true">س</div>
         <div>
           <p class="brand-name">سایتورا</p>
           <p class="brand-subtitle">مدیریت پروژه‌های شما</p>
@@ -641,6 +861,11 @@
       </section>
 
       <!-- PROFILE -->
+      <section class="page" id="page-detail" aria-label="جزئیات پروژه">
+        <button class="text-button" id="detailBack" type="button">→ بازگشت</button>
+        <div id="detailContent"></div>
+      </section>
+
       <section class="page" id="page-profile" aria-labelledby="profileTitle">
         <h1 class="page-title" id="profileTitle">پروفایل</h1>
         <p class="subtitle">اطلاعات حساب تلگرام شما</p>
@@ -711,6 +936,9 @@
     const state = {
       projects: [],
       role: 'client',
+      currentPage: 'home',
+      previousPage: 'projects',
+      detailToken: 0,
       busy: false
     };
 
@@ -776,7 +1004,270 @@
       };
     }
 
+    // ---------- Project details page ----------
+    const STAGES = [
+      { key: 'accepted', label: 'پذیرش', percent: 15 },
+      { key: 'developing', label: 'توسعه', percent: 40 },
+      { key: 'testing', label: 'تست', percent: 70 },
+      { key: 'finalizing', label: 'نهایی‌سازی', percent: 90 },
+      { key: 'completed', label: 'تحویل', percent: 100 }
+    ];
+    const PAUSED_STATUSES = ['waiting_client', 'on_hold'];
+
+    function makeEl(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    }
+
+    // Activity details look like: "developing → testing | optional note"
+    function parseChange(details) {
+      const [change, ...noteParts] = String(details || '').split(' | ');
+      const [from, to] = change.split(' → ');
+      return {
+        from: (from || '').trim(),
+        to: (to || '').trim(),
+        note: noteParts.join(' | ').trim()
+      };
+    }
+
+    // Activity is newest first. Finds the last real stage before a pause/cancel.
+    function lastStageFromHistory(activity) {
+      for (const entry of activity) {
+        if (entry.action !== 'status_changed') continue;
+        const { from } = parseChange(entry.details);
+        if (STAGES.some((stage) => stage.key === from)) return from;
+      }
+      return 'accepted';
+    }
+
+    function computeProgress(project, activity) {
+      const status = project.status;
+
+      if (status === 'pending') return { percent: 0, mode: 'pending', stage: null };
+      if (status === 'declined') return { percent: 0, mode: 'stopped', stage: null };
+      if (status === 'completed') return { percent: 100, mode: 'done', stage: 'completed' };
+
+      let stageKey = status;
+      let mode = 'active';
+
+      if (PAUSED_STATUSES.includes(status)) {
+        stageKey = lastStageFromHistory(activity);
+        mode = 'paused';
+      } else if (status === 'cancelled') {
+        stageKey = lastStageFromHistory(activity);
+        mode = 'stopped';
+      }
+
+      const stage = STAGES.find((item) => item.key === stageKey) || STAGES[0];
+      return { percent: stage.percent, mode, stage: stage.key };
+    }
+
+    function formatDateTime(seconds) {
+      if (!seconds) return '';
+      try {
+        const date = new Date(Number(seconds) * 1000);
+        return (
+          date.toLocaleDateString('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' }) +
+          ' — ' +
+          date.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })
+        );
+      } catch {
+        return new Date(Number(seconds) * 1000).toLocaleString();
+      }
+    }
+
+    function describeActivity(entry) {
+      if (entry.action === 'created') return { text: 'درخواست پروژه ثبت شد', note: '' };
+      if (entry.action === 'accepted') return { text: 'درخواست پذیرفته شد', note: '' };
+      if (entry.action === 'declined') return { text: 'درخواست رد شد', note: '' };
+
+      if (entry.action === 'status_changed') {
+        const { to, note } = parseChange(entry.details);
+        return { text: `وضعیت به «${STATUS[to] || to}» تغییر کرد`, note };
+      }
+
+      return { text: entry.action, note: '' };
+    }
+
+    function renderProgressCard(project, activity) {
+      const info = computeProgress(project, activity);
+      const card = makeEl('section', 'progress-card');
+
+      const head = makeEl('div', 'progress-head');
+      head.append(
+        makeEl('span', 'progress-title', 'پیشرفت پروژه'),
+        makeEl('span', 'progress-percent', `${info.percent.toLocaleString('fa-IR')}٪`)
+      );
+
+      const track = makeEl('div', 'progress-track');
+      track.setAttribute('role', 'progressbar');
+      track.setAttribute('aria-valuemin', '0');
+      track.setAttribute('aria-valuemax', '100');
+      track.setAttribute('aria-valuenow', String(info.percent));
+
+      const fill = makeEl('div', `progress-fill ${info.mode}`);
+      fill.style.width = '0%';
+      track.append(fill);
+
+      // Animate from empty to the real value after the first paint.
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        fill.style.width = `${info.percent}%`;
+      }));
+
+      const captions = {
+        pending: 'پس از بررسی درخواست، پیشرفت پروژه اینجا نمایش داده می‌شود.',
+        active: statusLabel(project.status),
+        paused: `${statusLabel(project.status)} — پیشرفت تا همین مرحله ثبت شده است.`,
+        stopped: project.status === 'declined'
+          ? 'این درخواست پذیرفته نشد.'
+          : 'این پروژه لغو شده است.',
+        done: 'پروژه با موفقیت تکمیل شد 🎉'
+      };
+
+      const caption = makeEl('p', 'progress-caption', captions[info.mode]);
+
+      const steps = makeEl('div', 'steps');
+      const currentIndex = STAGES.findIndex((stage) => stage.key === info.stage);
+
+      STAGES.forEach((stage, index) => {
+        const step = makeEl('div', 'step');
+        const done = info.mode === 'done' || index < currentIndex;
+        const current = info.mode !== 'done' && index === currentIndex;
+
+        if (done) step.classList.add('done');
+        if (current) step.classList.add('current');
+
+        step.append(makeEl('span', 'step-dot'), makeEl('span', 'step-label', stage.label));
+        steps.append(step);
+      });
+
+      card.append(head, track, caption, steps);
+      return card;
+    }
+
+    function renderDetail(project, activity) {
+      const root = $('detailContent');
+      root.replaceChildren();
+
+      const listItem = state.projects.find((item) => Number(item.id) === Number(project.id));
+
+      root.append(makeEl('h1', 'page-title', project.title));
+
+      const meta = makeEl('div', 'project-meta');
+      meta.append(
+        makeEl('span', 'badge', statusLabel(project.status)),
+        makeEl('span', 'project-description', CATEGORY[project.category] || project.category)
+      );
+      root.append(meta, renderProgressCard(project, activity));
+
+      const descBox = makeEl('section', 'detail-section');
+      descBox.append(
+        makeEl('h2', '', 'توضیحات پروژه'),
+        makeEl('p', 'detail-text', project.description)
+      );
+      root.append(descBox);
+
+      if (project.adminNote) {
+        const noteBox = makeEl('section', 'detail-section');
+        noteBox.append(
+          makeEl('h2', '', 'یادداشت'),
+          makeEl('p', 'detail-text', project.adminNote)
+        );
+        root.append(noteBox);
+      }
+
+      const rows = [
+        ['شناسه', `SAI-${project.id}`],
+        ['بودجه', project.budget],
+        ['مهلت تحویل', project.deadline],
+        ['تاریخ ثبت', formatDateTime(project.createdAt)],
+        ['آخرین به‌روزرسانی', formatDateTime(project.updatedAt)]
+      ];
+
+      if (state.role === 'admin') {
+        const name = listItem?.clientName
+          ? listItem.clientName + (listItem.clientUsername ? ` (@${listItem.clientUsername})` : '')
+          : String(project.clientId);
+        rows.push(['مشتری', name]);
+      }
+
+      const info = makeEl('section', 'detail-section');
+      info.append(makeEl('h2', '', 'مشخصات'));
+
+      rows.filter(([, value]) => value).forEach(([label, value]) => {
+        const row = makeEl('div', 'detail-row');
+        row.append(makeEl('span', 'detail-label', label), makeEl('span', 'detail-value', value));
+        info.append(row);
+      });
+
+      root.append(info);
+
+      const history = makeEl('section', 'detail-section');
+      history.append(makeEl('h2', '', 'تاریخچه'));
+
+      if (!activity.length) {
+        history.append(makeEl('p', 'detail-text', 'هنوز رویدادی ثبت نشده است.'));
+      } else {
+        const timeline = makeEl('ol', 'timeline');
+
+        activity.forEach((entry) => {
+          const { text, note } = describeActivity(entry);
+          const item = makeEl('li', 'timeline-item');
+          item.append(makeEl('strong', '', text));
+          if (note) item.append(makeEl('span', 'timeline-note', note));
+          item.append(makeEl('small', '', formatDateTime(entry.createdAt)));
+          timeline.append(item);
+        });
+
+        history.append(timeline);
+      }
+
+      root.append(history);
+    }
+
+    async function openProject(id) {
+      const token = ++state.detailToken;
+
+      switchPage('detail');
+      window.scrollTo(0, 0);
+
+      const root = $('detailContent');
+      root.replaceChildren(makeEl('div', 'loading', 'در حال دریافت جزئیات پروژه…'));
+
+      try {
+        const result = await callEndpoint('getProject', { projectId: id });
+
+        if (token !== state.detailToken || state.currentPage !== 'detail') return;
+
+        renderDetail(result.project, result.activity || []);
+      } catch (error) {
+        console.error('getProject failed:', error);
+
+        if (token !== state.detailToken) return;
+
+        root.replaceChildren(
+          makeEl('div', 'empty', error?.message || 'دریافت جزئیات پروژه ناموفق بود.')
+        );
+      }
+    }
+
+    function closeDetail() {
+      state.detailToken += 1;
+      switchPage(state.previousPage || 'projects');
+    }
+
     function switchPage(page) {
+      if (page === 'detail' && state.currentPage !== 'detail') {
+        state.previousPage = state.currentPage;
+      }
+
+      state.currentPage = page;
+
+      if (page === 'detail') tg?.BackButton?.show?.();
+      else tg?.BackButton?.hide?.();
+
       document.querySelectorAll('.page').forEach((section) => {
         section.classList.toggle('active', section.id === `page-${page}`);
       });
@@ -858,6 +1349,23 @@
       if (state.role === 'admin') {
         card.append(renderAdminControls(project));
       }
+
+      card.classList.add('clickable');
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+
+      card.addEventListener('click', (event) => {
+        if (event.target.closest('.admin-box')) return;
+        openProject(project.id);
+      });
+
+      card.addEventListener('keydown', (event) => {
+        if (event.target !== card) return;
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          openProject(project.id);
+        }
+      });
 
       return card;
     }
@@ -1019,6 +1527,37 @@
       renderProjectList($('allProjectList'), filtered);
     }
 
+    // Shows a picture inside `node`; keeps the text fallback if it can't load.
+    function setAvatar(node, url, fallbackText) {
+      if (node.dataset.src === (url || '')) return;
+      node.dataset.src = url || '';
+      node.textContent = fallbackText;
+
+      if (!url) return;
+
+      const img = document.createElement('img');
+      img.className = 'avatar-img';
+      img.alt = '';
+      img.referrerPolicy = 'no-referrer';
+
+      img.addEventListener('load', () => {
+        if (node.dataset.src !== url) return;
+        node.textContent = '';
+        node.append(img);
+      });
+
+      img.src = url;
+    }
+
+    function renderBotAvatar(username) {
+      if (!username) return;
+      setAvatar(
+        $('botAvatar'),
+        `https://t.me/i/userpic/320/${encodeURIComponent(username)}.jpg`,
+        'س'
+      );
+    }
+
     function renderProfile() {
       const firstName = user?.first_name || 'کاربر';
       const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(' ');
@@ -1029,8 +1568,8 @@
         ? `@${user.username}`
         : 'کاربر تلگرام';
       $('profileId').textContent = user?.id ? String(user.id) : 'در دسترس نیست';
-      $('headerAvatar').textContent = initial;
-      $('profileAvatar').textContent = initial;
+      setAvatar($('headerAvatar'), user?.photo_url, initial);
+      setAvatar($('profileAvatar'), user?.photo_url, initial);
       $('profileProjectCount').textContent = state.projects.length;
 
       $('greeting').textContent = `سلام ${firstName}، خوش آمدید 👋`;
@@ -1074,6 +1613,7 @@
         }
 
         state.role = result?.user?.role === 'admin' ? 'admin' : 'client';
+        renderBotAvatar(result?.bot?.username);
         state.projects = projects.map(normalizeProject);
       } catch (error) {
         console.error('getDashboard failed:', error);
@@ -1139,6 +1679,9 @@
         $('submitProject').textContent = 'ثبت درخواست';
       }
     });
+
+    $('detailBack').addEventListener('click', closeDetail);
+    tg?.BackButton?.onClick?.(closeDetail);
 
     $('helpButton').addEventListener('click', () => {
       tg?.showAlert?.(

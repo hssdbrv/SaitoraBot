@@ -1,4 +1,4 @@
-import { db } from "sdk";
+import { api, db } from "sdk";
 import { eq, desc } from "sdk/db";
 
 import {
@@ -13,6 +13,22 @@ import {
 } from "../lib/common.js";
 
 const MAX_PROJECTS = 200;
+
+// The bot's username never changes, so look it up once.
+let cachedBotUsername = null;
+
+async function getBotUsername() {
+  if (cachedBotUsername) return cachedBotUsername;
+
+  try {
+    const me = await api.getMe();
+    cachedBotUsername = me?.username || null;
+  } catch (error) {
+    console.error("getMe failed:", error?.description || error);
+  }
+
+  return cachedBotUsername;
+}
 
 export default async function (input, ctx) {
   const user = ctx.initData.user;
@@ -55,6 +71,10 @@ export default async function (input, ctx) {
   }
 
   return {
+    bot: {
+      username: await getBotUsername()
+    },
+
     user: {
       id: user.id,
       firstName: user.first_name,
