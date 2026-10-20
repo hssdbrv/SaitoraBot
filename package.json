@@ -6,9 +6,8 @@
     "vite": "^8.3.4"
   },
   "scripts": {
-    "deploy": "npm run build && tgcloud push",
+    "deploy": "npm vite build && tgcloud push",
     "dev": "vite",
-    "build": "vite build",
     "status": "tgcloud status",
     "run": "tgcloud run"
   },
