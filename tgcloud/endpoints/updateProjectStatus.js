@@ -80,6 +80,7 @@ export default async function (input, ctx) {
     .update(projects)
     .set({
       status: newStatus,
+      ...(note ? { adminNote: note } : {}),
       updatedAt: Math.floor(Date.now() / 1000)
     })
     .where(eq(projects.id, projectId))

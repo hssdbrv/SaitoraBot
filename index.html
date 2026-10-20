@@ -845,7 +845,15 @@
       category.textContent = CATEGORY[project.category] || project.category;
 
       meta.append(status, category);
-      card.append(title, description, meta);
+
+      if (project.adminNote) {
+        const note = document.createElement('p');
+        note.className = 'project-description';
+        note.textContent = `یادداشت: ${project.adminNote}`;
+        card.append(title, description, note, meta);
+      } else {
+        card.append(title, description, meta);
+      }
 
       if (state.role === 'admin') {
         card.append(renderAdminControls(project));
@@ -888,7 +896,11 @@
       const info = document.createElement('p');
       info.className = 'project-description';
       info.textContent =
-        `شناسه: SAI-${project.id} | مشتری: ${project.clientId}` +
+        `شناسه: SAI-${project.id} | مشتری: ` +
+        (project.clientName
+          ? project.clientName +
+            (project.clientUsername ? ` (@${project.clientUsername})` : '')
+          : project.clientId) +
         (project.budget ? ` | بودجه: ${project.budget}` : '') +
         (project.deadline ? ` | مهلت: ${project.deadline}` : '');
       box.append(info);

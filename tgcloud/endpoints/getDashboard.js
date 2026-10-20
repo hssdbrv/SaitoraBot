@@ -3,7 +3,7 @@ import { eq, desc } from "sdk/db";
 
 import {
   projects,
-  projectStatuses
+  users
 } from "../schema.js";
 
 import {
@@ -23,11 +23,13 @@ export default async function (input, ctx) {
 
   await ensureUser(user);
 
+  const admin = isAdmin(user.id);
+
   let projectQuery = db
     .select()
     .from(projects);
 
-  if (!isAdmin(user.id)) {
+  if (!admin) {
     projectQuery = projectQuery.where(
       eq(projects.clientId, Number(user.id))
     );
@@ -38,25 +40,42 @@ export default async function (input, ctx) {
     .limit(MAX_PROJECTS)
     .all();
 
-  const statuses = await db
-    .select()
-    .from(projectStatuses)
-    .where(eq(projectStatuses.active, 1))
-    .all();
+  // Admin sees who submitted each project.
+  const clients = new Map();
+
+  if (admin) {
+    const allUsers = await db
+      .select()
+      .from(users)
+      .all();
+
+    for (const client of allUsers) {
+      clients.set(Number(client.id), client);
+    }
+  }
 
   return {
     user: {
       id: user.id,
       firstName: user.first_name,
       username: user.username || null,
-      role: isAdmin(user.id) ? "admin" : "client"
+      role: admin ? "admin" : "client"
     },
 
-    projects: rows.map(project => ({
-      ...project,
-      statusLabel: statusLabel(project.status)
-    })),
+    projects: rows.map(project => {
+      const item = {
+        ...project,
+        statusLabel: statusLabel(project.status)
+      };
 
-    statuses
+      if (admin) {
+        const client = clients.get(Number(project.clientId));
+
+        item.clientName = client?.firstName || null;
+        item.clientUsername = client?.username || null;
+      }
+
+      return item;
+    })
   };
 }

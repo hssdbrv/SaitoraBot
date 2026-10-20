@@ -1,5 +1,6 @@
 import { db } from "sdk";
 import { EndpointError } from "sdk";
+import { eq } from "sdk/db";
 
 import {
   projects
@@ -13,15 +14,32 @@ import {
   escapeHtml
 } from "../lib/common.js";
 
+const MAX_PENDING_PER_USER = 3;
+
+// Telegram messages are limited to 4096 characters.
+const ALERT_DESCRIPTION_LIMIT = 2500;
+const ALERT_ESCAPED_LIMIT = 3000;
+
+function shortenForAlert(text) {
+  if (text.length <= ALERT_DESCRIPTION_LIMIT) {
+    return escapeHtml(text);
+  }
+
+  let short = text.slice(0, ALERT_DESCRIPTION_LIMIT);
+
+  // Escaping (&amp; etc.) can make the text longer.
+  while (escapeHtml(short).length > ALERT_ESCAPED_LIMIT) {
+    short = short.slice(0, Math.floor(short.length * 0.8));
+  }
+
+  return escapeHtml(short) + "…\n\n(متن کامل در برنامه سایتورا)";
+}
+
 export default async function (input, ctx) {
   const user = ctx.initData.user;
 
   if (!user) {
     throw new EndpointError("کاربر تلگرام شناسایی نشد.");
-  }
-
-  if (isAdmin(user.id)) {
-    // Administrators can also submit projects if desired.
   }
 
   const title = String(input.title || "").trim();
@@ -64,6 +82,24 @@ export default async function (input, ctx) {
 
   await ensureUser(user);
 
+  if (!isAdmin(user.id)) {
+    const pending = await db
+      .select()
+      .from(projects)
+      .where(
+        eq(projects.clientId, Number(user.id)),
+        eq(projects.status, "pending")
+      )
+      .all();
+
+    if (pending.length >= MAX_PENDING_PER_USER) {
+      throw new EndpointError(
+        `شما در حال حاضر ${MAX_PENDING_PER_USER} درخواست در انتظار بررسی دارید. ` +
+        "لطفاً تا بررسی آن‌ها صبر کنید."
+      );
+    }
+  }
+
   const [project] = await db
     .insert(projects)
     .values({
@@ -100,7 +136,7 @@ export default async function (input, ctx) {
     `دسته‌بندی: ${categoryLabels[category]}\n` +
     `بودجه: ${escapeHtml(budget || "تعیین نشده")}\n` +
     `مهلت تحویل: ${escapeHtml(deadline || "تعیین نشده")}\n\n` +
-    `<b>توضیحات:</b>\n${escapeHtml(description)}\n\n` +
+    `<b>توضیحات:</b>\n${shortenForAlert(description)}\n\n` +
     `نام مشتری: ${escapeHtml(user.first_name || "کاربر")}\n` +
     `شناسه تلگرام: <code>${user.id}</code>`;
 
