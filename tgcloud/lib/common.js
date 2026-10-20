@@ -52,14 +52,15 @@ export function escapeHtml(value) {
   );
 }
 
-export async function ensureUser(user) {
+export async function ensureUser(user, source = "mini_app") {
+  const userId = Number(user.id);
+  const role = isAdmin(userId) ? "admin" : "client";
+
   const existing = await db
     .select()
     .from(users)
-    .where(eq(users.id, Number(user.id)))
+    .where(eq(users.id, userId))
     .get();
-
-  const role = isAdmin(user.id) ? "admin" : "client";
 
   if (existing) {
     await db
@@ -69,7 +70,7 @@ export async function ensureUser(user) {
         username: user.username || null,
         role
       })
-      .where(eq(users.id, Number(user.id)))
+      .where(eq(users.id, userId))
       .run();
 
     return {
@@ -80,22 +81,74 @@ export async function ensureUser(user) {
     };
   }
 
-  await db
-    .insert(users)
-    .values({
-      id: Number(user.id),
-      firstName: user.first_name || "کاربر",
-      username: user.username || null,
-      role
-    })
-    .run();
+  const firstName = user.first_name || "کاربر";
+
+  try {
+    await db
+      .insert(users)
+      .values({
+        id: userId,
+        firstName,
+        username: user.username || null,
+        role
+      })
+      .run();
+  } catch (error) {
+    // Another request created this user a moment ago.
+    const created = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .get();
+
+    if (created) return created;
+    throw error;
+  }
+
+  if (role !== "admin") {
+    await notifyNewUser(user, source);
+  }
 
   return {
-    id: Number(user.id),
-    firstName: user.first_name || "کاربر",
+    id: userId,
+    firstName,
     username: user.username || null,
     role
   };
+}
+
+async function notifyNewUser(user, source) {
+  try {
+    const total = await db.$count(users);
+
+    let time;
+    try {
+      time = new Date().toLocaleString("en-GB", {
+        timeZone: "Asia/Tehran"
+      });
+    } catch {
+      time = new Date().toISOString();
+    }
+
+    const fullName = [user.first_name, user.last_name]
+      .filter(Boolean)
+      .join(" ");
+
+    await notifyAdmin(
+      "🆕 <b>کاربر جدید در سایتورا</b>\n\n" +
+      `👤 نام: ${escapeHtml(fullName || "نامشخص")}\n` +
+      `🆔 شناسه: <code>${Number(user.id)}</code>\n` +
+      `🔗 نام کاربری: ${user.username ? "@" + escapeHtml(user.username) : "ندارد"}\n` +
+      `🌐 زبان: ${escapeHtml(user.language_code || "نامشخص")}\n` +
+      `⭐ پریمیوم: ${user.is_premium ? "بله" : "خیر"}\n` +
+      `📲 ورود از: ${source === "bot" ? "ربات" : "برنامه سایتورا"}\n` +
+      `👥 تعداد کل کاربران: ${total}\n` +
+      `🕒 زمان: ${escapeHtml(time)}\n\n` +
+      `<a href="tg://user?id=${Number(user.id)}">باز کردن پروفایل</a>`
+    );
+  } catch (error) {
+    console.error("notifyNewUser failed:", error?.description || error);
+  }
 }
 
 export async function recordActivity(

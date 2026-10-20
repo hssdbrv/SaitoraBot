@@ -31,7 +31,7 @@ export default async function (message) {
   const text = (message.text || "").trim();
 
   if (text.startsWith("/start")) {
-    await ensureUser(user);
+    await ensureUser(user, "bot");
 
     const keyboard = {
       inline_keyboard: [
@@ -53,13 +53,17 @@ export default async function (message) {
     };
 
     let welcome =
-      `سلام ${escapeHtml(user.first_name)} عزیز!\n\n` +
-      "به سایتورا خوش آمدید.\n\n" +
-      "سایتورا سامانه ثبت و مدیریت پروژه‌های فریلنسری است.\n\n" +
-      "از طریق برنامه می‌توانید پروژه جدید ثبت کنید و وضعیت پروژه‌های خود را پیگیری کنید.";
+      `سلام ${escapeHtml(user.first_name)} عزیز 👋\n\n` +
+      "به <b>سایتورا</b> خوش آمدید.\n" +
+      "سامانه‌ای برای ثبت و مدیریت پروژه‌های فریلنسری.\n\n" +
+      "✨ با سایتورا می‌توانید:\n" +
+      "• درخواست پروژه جدید ثبت کنید\n" +
+      "• وضعیت پروژه‌های خود را پیگیری کنید\n" +
+      "• تغییر وضعیت‌ها را همین‌جا از ربات دریافت کنید\n\n" +
+      "برای شروع، دکمه زیر را بزنید 👇";
 
     if (isAdmin(user.id)) {
-      welcome += "\n\nشما به عنوان مدیر سامانه شناسایی شده‌اید.";
+      welcome += "\n\n🔐 شما به عنوان مدیر سامانه شناسایی شده‌اید.";
     }
 
     await api.sendMessage({
@@ -120,7 +124,7 @@ export default async function (message) {
   }
 
   if (text === "/projects") {
-    await ensureUser(user);
+    await ensureUser(user, "bot");
 
     const rows = await db
       .select()
